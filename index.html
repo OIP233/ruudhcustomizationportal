@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OIP Simulator Customization Portal</title>
+    <title>OIP Simulator Controller</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         
@@ -142,6 +142,8 @@
         .btn-primary:hover { background: #2563eb; }
         .btn-secondary { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary); }
         .btn-secondary:hover { border-color: var(--accent-blue); }
+        .btn-success { background: var(--accent-green); color: #0d1117; }
+        .btn-success:hover { background: #1fb88a; }
         .btn-success { background: var(--accent-green); color: white; }
         .btn-success:hover { background: #059669; }
         .btn-danger { background: var(--accent-red-dim); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.3); }
@@ -180,15 +182,16 @@
             .tone-option { flex-direction: column; }
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
 <div class="header">
     <div class="header-left">
-        <div class="header-logo">⚙️</div>
+        <div class="header-logo">🎛️</div>
         <div>
-            <div class="header-title">OIP Simulator Customization Portal</div>
-            <div class="header-subtitle" id="headerSub">Configureer een bedrijfsspecifieke versie van de Controlekamer Simulator</div>
+            <div class="header-title">OIP Simulator Controller</div>
+            <div class="header-subtitle" id="headerSub">Beheer configuraties en analyseer trainingsresultaten</div>
         </div>
     </div>
     <div class="header-actions">
@@ -203,8 +206,10 @@
     <div class="tab active" data-tab="settings" onclick="switchTab('settings')">⚙️ <span class="tl" data-nl="Bedrijf" data-en="Company">Bedrijf</span></div>
     <div class="tab" data-tab="tone" onclick="switchTab('tone')">🎙️ <span class="tl" data-nl="Toon & Protocol" data-en="Tone & Protocol">Toon & Protocol</span></div>
     <div class="tab" data-tab="scenarios" onclick="switchTab('scenarios')">📋 <span class="tl" data-nl="Scenario's" data-en="Scenarios">Scenario's</span> <span class="tab-badge">50</span></div>
-    <div class="tab" data-tab="new-scenarios" onclick="switchTab('new-scenarios')">➕ <span class="tl" data-nl="Nieuw" data-en="New">Nieuw</span> <span class="tab-badge new-count">0</span></div>
-    <div class="tab" data-tab="export" onclick="switchTab('export')">📦 <span class="tl" data-nl="Export" data-en="Export">Export</span></div>
+    <div class="tab" data-tab="new-scenarios" onclick="switchTab('new-scenarios')">🔄 <span class="tl" data-nl="Vervangend" data-en="Replacement">Vervangend</span> <span class="tab-badge new-count">0</span></div>
+    <div class="tab" data-tab="access-codes" onclick="switchTab('access-codes')">📄 <span class="tl" data-nl="Persoonlijke Configuratie" data-en="Personal Configuration">Persoonlijke Configuratie</span> <span class="tab-badge codes-count">0</span></div>
+    <div class="tab" data-tab="export" onclick="switchTab('export')">📥 <span class="tl" data-nl="Import" data-en="Import">Import</span></div>
+    <div class="tab" data-tab="decoder" onclick="switchTab('decoder')" style="border-left: 1px solid var(--border); margin-left: 10px; padding-left: 22px;">🔓 <span class="tl" data-nl="Resultaten" data-en="Results">Resultaten</span></div>
 </div>
 
 <div class="content">
@@ -327,7 +332,7 @@
         <div class="stat-card"><div class="stat-value" style="color:var(--accent-blue);">50</div><div class="stat-label tl" data-nl="Scenario's" data-en="Scenarios">Scenario's</div></div>
         <div class="stat-card"><div class="stat-value" style="color:var(--accent-green);" id="statChanges">0</div><div class="stat-label tl" data-nl="Globale wijzigingen" data-en="Global Changes">Globale wijzigingen</div></div>
         <div class="stat-card"><div class="stat-value" style="color:var(--accent-orange);" id="statEdited">0</div><div class="stat-label tl" data-nl="Scenario's bewerkt" data-en="Scenarios Edited">Scenario's bewerkt</div></div>
-        <div class="stat-card"><div class="stat-value" style="color:var(--accent-purple);" id="statNew">0</div><div class="stat-label tl" data-nl="Nieuwe scenario's" data-en="New Scenarios">Nieuwe scenario's</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--accent-purple);" id="statNew">0</div><div class="stat-label tl" data-nl="Vervangingen" data-en="Replacements">Vervangingen</div></div>
     </div>
     
     <div class="info-bar warn-bar">
@@ -341,41 +346,239 @@
 
 <!-- ============ TAB: NIEUW ============ -->
 <div class="tab-content" id="tab-new-scenarios">
+    <div class="info-bar">
+        <span class="info-bar-icon">💡</span>
+        <div class="tl" data-nl="De simulator bevat altijd precies 50 scenario's. Nieuwe bedrijfsspecifieke scenario's vervangen bestaande scenario's. Selecteer welk scenario vervangen moet worden en vul alle verplichte velden in. Velden met * zijn verplicht." data-en="The simulator always contains exactly 50 scenarios. New company-specific scenarios replace existing scenarios. Select which scenario to replace and fill in all required fields. Fields with * are required.">De simulator bevat altijd precies 50 scenario's. Nieuwe bedrijfsspecifieke scenario's vervangen bestaande scenario's. Selecteer welk scenario vervangen moet worden en vul alle verplichte velden in. Velden met * zijn verplicht.</div>
+    </div>
     <div class="section">
-        <div class="section-header"><div class="section-title"><div class="section-title-icon" style="background:var(--accent-green-dim);color:var(--accent-green);">💡</div><span class="tl" data-nl="Concept Scenario's" data-en="Concept Scenarios">Concept Scenario's</span></div>
-        <button class="btn btn-primary btn-sm" onclick="addNewScenario()">+ <span class="tl" data-nl="Nieuw Scenario" data-en="New Scenario">Nieuw Scenario</span></button></div>
-        <p class="section-description tl" data-nl="Stel concept-scenario's op specifiek voor uw bedrijf. Beschrijf de situatie en antwoorden zo volledig mogelijk." data-en="Draft concept scenarios specific to your company. Describe the situation and answers as completely as possible.">Stel concept-scenario's op specifiek voor uw bedrijf. Beschrijf de situatie en antwoorden zo volledig mogelijk.</p>
+        <div class="section-header"><div class="section-title"><div class="section-title-icon" style="background:var(--accent-green-dim);color:var(--accent-green);">🔄</div><span class="tl" data-nl="Vervangende Scenario's" data-en="Replacement Scenarios">Vervangende Scenario's</span></div>
+        <button class="btn btn-primary btn-sm" onclick="addNewScenario()">+ <span class="tl" data-nl="Scenario Toevoegen" data-en="Add Scenario">Scenario Toevoegen</span></button></div>
+        <p class="section-description tl" data-nl="Voeg bedrijfsspecifieke scenario's toe die bestaande standaard scenario's vervangen. De simulator blijft 50 scenario's bevatten." data-en="Add company-specific scenarios that replace existing standard scenarios. The simulator will remain at 50 scenarios.">Voeg bedrijfsspecifieke scenario's toe die bestaande standaard scenario's vervangen. De simulator blijft 50 scenario's bevatten.</p>
     </div>
     <div id="newScenariosList"></div>
     <div id="noNewScenarios" class="section" style="text-align:center;padding:48px;">
-        <div style="font-size:48px;margin-bottom:16px;">📝</div>
-        <p style="color:var(--text-muted);margin-bottom:16px;" class="tl" data-nl="Nog geen nieuwe scenario's." data-en="No new scenarios yet.">Nog geen nieuwe scenario's.</p>
-        <button class="btn btn-primary" onclick="addNewScenario()">+ <span class="tl" data-nl="Eerste Scenario" data-en="First Scenario">Eerste Scenario</span></button>
+        <div style="font-size:48px;margin-bottom:16px;">🔄</div>
+        <p style="color:var(--text-muted);margin-bottom:16px;" class="tl" data-nl="Nog geen vervangende scenario's toegevoegd." data-en="No replacement scenarios added yet.">Nog geen vervangende scenario's toegevoegd.</p>
+        <button class="btn btn-primary" onclick="addNewScenario()">+ <span class="tl" data-nl="Eerste Scenario Toevoegen" data-en="Add First Scenario">Eerste Scenario Toevoegen</span></button>
     </div>
 </div>
 
-<!-- ============ TAB: EXPORT ============ -->
-<div class="tab-content" id="tab-export">
+<!-- ============ TAB: TOEGANGSCODES ============ -->
+<div class="tab-content" id="tab-access-codes">
+    <div class="info-bar">
+        <span class="info-bar-icon">🎟️</span>
+        <div class="tl" data-nl="Genereer persoonlijke configuratiebestanden voor deelnemers. Elk bestand bevat een unieke toegangscode en kan slechts éénmaal worden gebruikt. Voor herkansing is een nieuw configuratiebestand nodig." data-en="Generate personal configuration files for participants. Each file contains a unique access code and can only be used once. A new configuration file is required for retakes.">Genereer persoonlijke configuratiebestanden voor deelnemers. Elk bestand bevat een unieke toegangscode en kan slechts éénmaal worden gebruikt. Voor herkansing is een nieuw configuratiebestand nodig.</div>
+    </div>
+
     <div class="section">
-        <div class="section-header"><div class="section-title"><div class="section-title-icon" style="background:var(--accent-blue-dim);color:var(--accent-blue);">📦</div><span class="tl" data-nl="Configuratie Exporteren" data-en="Export Configuration">Configuratie Exporteren</span></div></div>
-        <p class="section-description tl" data-nl="Exporteer uw volledige configuratie als JSON. Dit bestand wordt gebruikt om een bedrijfsspecifieke simulator te genereren." data-en="Export your full configuration as JSON. This file is used to generate a company-specific simulator.">Exporteer uw volledige configuratie als JSON. Dit bestand wordt gebruikt om een bedrijfsspecifieke simulator te genereren.</p>
-        <div style="display:flex;gap:12px;margin-bottom:24px;">
-            <button class="btn btn-primary" onclick="generateExport()">📄 <span class="tl" data-nl="Genereer" data-en="Generate">Genereer</span></button>
-            <button class="btn btn-success hidden" id="btnDownload" onclick="downloadExport()">⬇️ Download JSON</button>
-            <button class="btn btn-secondary hidden" id="btnCopy" onclick="copyExport()">📋 <span class="tl" data-nl="Kopieer" data-en="Copy">Kopieer</span></button>
+        <div class="section-header">
+            <div class="section-title"><div class="section-title-icon" style="background:var(--accent-green-dim);color:var(--accent-green);">👤</div><span class="tl" data-nl="Persoonlijke Configuratie" data-en="Personal Configuration">Persoonlijke Configuratie</span></div>
         </div>
-        <div id="exportSummary" class="hidden"></div>
-        <div id="exportPreviewContainer" class="hidden">
-            <h3 style="font-size:14px;font-weight:600;margin:16px 0 12px;">🔍 JSON Preview</h3>
-            <div class="export-preview" id="exportPreview"></div>
+        <p class="section-description tl" data-nl="Genereer een configuratiebestand voor één deelnemer. Dit bestand bevat alle bedrijfsaanpassingen plus een unieke toegangscode." data-en="Generate a configuration file for one participant. This file contains all company customizations plus a unique access code.">Genereer een configuratiebestand voor één deelnemer. Dit bestand bevat alle bedrijfsaanpassingen plus een unieke toegangscode.</p>
+        
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr auto; align-items: end; gap: 16px;">
+            <div class="form-group">
+                <label class="tl" data-nl="Naam deelnemer" data-en="Participant name">Naam deelnemer</label>
+                <input type="text" id="participantNameForCode" placeholder="bijv. Jan de Vries" style="width:100%;">
+            </div>
+            <div class="form-group">
+                <label class="tl" data-nl="Geldig tot (optioneel)" data-en="Valid until (optional)">Geldig tot (optioneel)</label>
+                <input type="date" id="singleCodeExpiry" style="width:100%;">
+            </div>
+            <button class="btn btn-primary" onclick="generatePersonalConfig()" style="height:46px;">
+                📄 <span class="tl" data-nl="Genereer & Download" data-en="Generate & Download">Genereer & Download</span>
+            </button>
         </div>
     </div>
+
     <div class="section">
-        <div class="section-header"><div class="section-title"><div class="section-title-icon" style="background:var(--accent-green-dim);color:var(--accent-green);">📥</div><span class="tl" data-nl="Importeren" data-en="Import">Importeren</span></div></div>
+        <div class="section-header">
+            <div class="section-title"><div class="section-title-icon" style="background:var(--accent-blue-dim);color:var(--accent-blue);">👥</div><span class="tl" data-nl="Batch Genereren" data-en="Batch Generate">Batch Genereren</span></div>
+        </div>
+        <p class="section-description tl" data-nl="Genereer configuratiebestanden voor meerdere deelnemers tegelijk. Voer namen in, gescheiden door een nieuwe regel." data-en="Generate configuration files for multiple participants at once. Enter names separated by new lines.">Genereer configuratiebestanden voor meerdere deelnemers tegelijk. Voer namen in, gescheiden door een nieuwe regel.</p>
+        
+        <div class="form-grid" style="grid-template-columns: 2fr 1fr; gap: 16px;">
+            <div class="form-group">
+                <label class="tl" data-nl="Deelnemers (één naam per regel)" data-en="Participants (one name per line)">Deelnemers (één naam per regel)</label>
+                <textarea id="batchParticipantNames" rows="6" placeholder="Jan de Vries&#10;Petra Jansen&#10;Mohammed El Amrani&#10;..." style="width:100%;font-family:'IBM Plex Mono',monospace;"></textarea>
+            </div>
+            <div>
+                <div class="form-group">
+                    <label class="tl" data-nl="Geldig tot (optioneel)" data-en="Valid until (optional)">Geldig tot (optioneel)</label>
+                    <input type="date" id="batchCodeExpiry" style="width:100%;">
+                </div>
+                <button class="btn btn-primary" onclick="generateBatchConfigs()" style="width:100%;margin-top:16px;">
+                    📦 <span class="tl" data-nl="Genereer Alle" data-en="Generate All">Genereer Alle</span>
+                </button>
+                <div style="margin-top:12px;font-size:12px;color:var(--text-muted);text-align:center;" id="batchCount">0 deelnemers</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <div class="section-title"><div class="section-title-icon" style="background:var(--accent-purple-dim);color:var(--accent-purple);">📋</div><span class="tl" data-nl="Uitgegeven Configuraties" data-en="Issued Configurations">Uitgegeven Configuraties</span> <span class="tab-badge codes-active" style="margin-left:8px;">0</span></div>
+            <div style="display:flex;gap:8px;">
+                <button class="btn btn-secondary btn-sm" onclick="downloadIssuedList()">⬇️ <span class="tl" data-nl="Export overzicht" data-en="Export overview">Export overzicht</span></button>
+                <button class="btn btn-secondary btn-sm" onclick="clearIssuedConfigs()" style="color:var(--accent-red);">🗑️ <span class="tl" data-nl="Wis lijst" data-en="Clear list">Wis lijst</span></button>
+            </div>
+        </div>
+        
+        <div id="issuedTableContainer">
+            <table class="replace-table" id="issuedTable">
+                <thead>
+                    <tr>
+                        <th class="tl" data-nl="Deelnemer" data-en="Participant">Deelnemer</th>
+                        <th>Sessie ID</th>
+                        <th class="tl" data-nl="Aangemaakt" data-en="Created">Aangemaakt</th>
+                        <th class="tl" data-nl="Geldig tot" data-en="Valid until">Geldig tot</th>
+                        <th style="width:100px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="issuedTableBody">
+                </tbody>
+            </table>
+            <div id="noIssuedMessage" style="text-align:center;padding:40px;color:var(--text-muted);">
+                <div style="font-size:48px;margin-bottom:16px;">📄</div>
+                <p class="tl" data-nl="Nog geen configuraties uitgegeven." data-en="No configurations issued yet.">Nog geen configuraties uitgegeven.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ TAB: IMPORT ============ -->
+<div class="tab-content" id="tab-export">
+    <div class="section">
+        <div class="section-header"><div class="section-title"><div class="section-title-icon" style="background:var(--accent-green-dim);color:var(--accent-green);">📥</div><span class="tl" data-nl="Instellingen Laden" data-en="Load Settings">Instellingen Laden</span></div></div>
+        <p class="section-description tl" data-nl="Laad eerder opgeslagen bedrijfsinstellingen om verder te werken of aan te passen." data-en="Load previously saved company settings to continue working or make adjustments.">Laad eerder opgeslagen bedrijfsinstellingen om verder te werken of aan te passen.</p>
         <input type="file" id="importFile" accept=".json" onchange="importConfig(event)" style="display:none;">
         <div style="display:flex;gap:12px;align-items:center;">
-            <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 <span class="tl" data-nl="JSON Laden" data-en="Load JSON">JSON Laden</span></button>
+            <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">📂 <span class="tl" data-nl="JSON Laden" data-en="Load JSON">JSON Laden</span></button>
             <span id="importStatus" style="font-size:13px;color:var(--text-muted);"></span>
+        </div>
+        <div style="margin-top:20px;padding:16px;background:rgba(0,184,255,0.06);border:1px solid rgba(0,184,255,0.2);border-radius:8px;font-size:13px;color:var(--text-secondary);">
+            💡 <strong>Tip:</strong> U kunt ook een eerder gegenereerde persoonlijke configuratie laden. De bedrijfsinstellingen worden dan automatisch ingevuld.
+        </div>
+    </div>
+</div>
+
+<!-- ============ TAB: DECODER ============ -->
+<div class="tab-content" id="tab-decoder">
+    <div class="section" id="decoderUploadSection">
+        <div class="section-header"><div class="section-title"><div class="section-title-icon" style="background:var(--accent-purple-dim);color:var(--accent-purple);">🔓</div><span class="tl" data-nl="Trainingsrapport Ontsleutelen" data-en="Decrypt Training Report">Trainingsrapport Ontsleutelen</span></div></div>
+        <p class="section-description tl" data-nl="Upload een versleuteld trainingsrapport (.xls) om de gedetailleerde resultaten te bekijken en een persoonlijk trainingsplan te genereren." data-en="Upload an encrypted training report (.xls) to view detailed results and generate a personalized training plan.">Upload een versleuteld trainingsrapport (.xls) om de gedetailleerde resultaten te bekijken en een persoonlijk trainingsplan te genereren.</p>
+        
+        <div id="decoderDropZone" style="border:2px dashed var(--border);border-radius:12px;padding:50px;text-align:center;transition:all 0.3s;cursor:pointer;" ondragover="event.preventDefault();this.style.borderColor='var(--accent-purple)';this.style.background='rgba(167,139,250,0.05)';" ondragleave="this.style.borderColor='var(--border)';this.style.background='transparent';" ondrop="handleDecoderDrop(event)" onclick="document.getElementById('decoderFileInput').click()">
+            <div style="font-size:48px;margin-bottom:16px;">📊</div>
+            <div style="font-size:16px;font-weight:500;margin-bottom:8px;" class="tl" data-nl="Sleep trainingsrapport hierheen" data-en="Drop training report here">Sleep trainingsrapport hierheen</div>
+            <div style="color:var(--text-muted);font-size:14px;" class="tl" data-nl="of klik om te selecteren (.xls bestand)" data-en="or click to select (.xls file)">of klik om te selecteren (.xls bestand)</div>
+            <input type="file" id="decoderFileInput" accept=".xls,.xlsx" style="display:none;" onchange="handleDecoderFile(event)">
+        </div>
+    </div>
+    
+    <div class="section hidden" id="decoderProcessingSection">
+        <div class="section-header"><div class="section-title"><div class="section-title-icon" style="background:var(--accent-orange-dim);color:var(--accent-orange);">📄</div><span class="tl" data-nl="Bestand Verwerken" data-en="Processing File">Bestand Verwerken</span></div>
+            <button class="btn btn-secondary btn-sm" onclick="resetDecoder()">✕ <span class="tl" data-nl="Ander bestand" data-en="Other file">Ander bestand</span></button>
+        </div>
+        
+        <div style="background:var(--bg-input);border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:15px;">
+            <span style="font-size:32px;">📄</span>
+            <div style="flex:1;">
+                <div style="font-weight:600;" id="decoderFileName">-</div>
+                <div style="font-size:13px;color:var(--text-muted);" id="decoderFileMeta">-</div>
+            </div>
+        </div>
+        
+        <div id="decoderError" class="hidden" style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:14px 18px;color:var(--accent-red);margin-bottom:16px;"></div>
+        
+        <div id="decoderLoading" style="text-align:center;padding:20px;color:var(--text-muted);">
+            <div style="font-size:24px;margin-bottom:8px;">⏳</div>
+            <span class="tl" data-nl="Rapport ontsleutelen..." data-en="Decrypting report...">Rapport ontsleutelen...</span>
+        </div>
+    </div>
+    
+    <div class="hidden" id="decoderResultsSection">
+        <!-- Deelnemer Info -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title"><div class="section-title-icon" style="background:var(--accent-green-dim);color:var(--accent-green);">👤</div><span class="tl" data-nl="Deelnemer" data-en="Participant">Deelnemer</span></div>
+                <span style="color:var(--text-muted);" id="decoderTrainingDate"></span>
+            </div>
+            <div class="form-grid form-grid-3">
+                <div class="form-group"><label class="tl" data-nl="Naam" data-en="Name">Naam</label><div style="font-size:18px;font-weight:600;" id="decoderParticipantName">-</div></div>
+                <div class="form-group"><label class="tl" data-nl="Ervaring" data-en="Experience">Ervaring</label><div style="font-size:18px;font-weight:600;" id="decoderParticipantExp">-</div></div>
+                <div class="form-group"><label>Simulator</label><div style="font-size:18px;font-weight:600;" id="decoderSimulator">-</div></div>
+            </div>
+        </div>
+        
+        <!-- Score Overview -->
+        <div class="section">
+            <div class="section-header"><div class="section-title"><div class="section-title-icon" style="background:var(--accent-blue-dim);color:var(--accent-blue);">📊</div><span class="tl" data-nl="Resultaten" data-en="Results">Resultaten</span></div></div>
+            <div class="form-grid" style="grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+                <div style="background:var(--bg-input);border-radius:10px;padding:20px;text-align:center;">
+                    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Score</div>
+                    <div style="font-size:36px;font-weight:700;color:var(--accent-green);" id="decoderScore">-</div>
+                </div>
+                <div style="background:var(--bg-input);border-radius:10px;padding:20px;text-align:center;">
+                    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Correct</div>
+                    <div style="font-size:36px;font-weight:700;color:var(--accent-green);" id="decoderCorrect">-</div>
+                </div>
+                <div style="background:var(--bg-input);border-radius:10px;padding:20px;text-align:center;">
+                    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Onjuist</div>
+                    <div style="font-size:36px;font-weight:700;color:var(--accent-red);" id="decoderIncorrect">-</div>
+                </div>
+                <div style="background:var(--bg-input);border-radius:10px;padding:20px;text-align:center;">
+                    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Totaal</div>
+                    <div style="font-size:36px;font-weight:700;" id="decoderTotal">-</div>
+                </div>
+            </div>
+            <div style="background:rgba(78,147,248,0.1);border:1px solid rgba(78,147,248,0.2);border-radius:10px;padding:20px;">
+                <div style="font-weight:600;color:var(--accent-blue);margin-bottom:8px;display:flex;align-items:center;gap:8px;">💡 <span class="tl" data-nl="Trainingsadvies" data-en="Training Advice">Trainingsadvies</span></div>
+                <div style="color:var(--text-secondary);line-height:1.7;" id="decoderAdvice">-</div>
+            </div>
+        </div>
+        
+        <!-- Category Analysis -->
+        <div class="section">
+            <div class="section-header"><div class="section-title"><div class="section-title-icon" style="background:var(--accent-orange-dim);color:var(--accent-orange);">📈</div><span class="tl" data-nl="Score per Categorie" data-en="Score by Category">Score per Categorie</span></div></div>
+            <table class="replace-table">
+                <thead><tr>
+                    <th class="tl" data-nl="Categorie" data-en="Category">Categorie</th>
+                    <th>Score</th>
+                    <th>%</th>
+                    <th class="tl" data-nl="Prioriteit" data-en="Priority">Prioriteit</th>
+                    <th class="tl" data-nl="Advies" data-en="Advice">Advies</th>
+                </tr></thead>
+                <tbody id="decoderCategoryTable"></tbody>
+            </table>
+        </div>
+        
+        <!-- Scenario Details -->
+        <div class="section">
+            <div class="section-header"><div class="section-title"><div class="section-title-icon" style="background:var(--accent-cyan);color:var(--bg-primary);">📋</div><span class="tl" data-nl="Scenario Details" data-en="Scenario Details">Scenario Details</span></div></div>
+            <div style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">
+                <table class="replace-table" style="margin:0;">
+                    <thead style="position:sticky;top:0;background:var(--bg-card);z-index:1;"><tr>
+                        <th style="width:40px;">Nr</th>
+                        <th class="tl" data-nl="Scenario" data-en="Scenario">Scenario</th>
+                        <th>Type</th>
+                        <th class="tl" data-nl="Categorie" data-en="Category">Categorie</th>
+                        <th class="tl" data-nl="Resultaat" data-en="Result">Resultaat</th>
+                        <th class="tl" data-nl="Tijd" data-en="Time">Tijd</th>
+                    </tr></thead>
+                    <tbody id="decoderScenarioTable"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Export Buttons -->
+        <div class="section">
+            <div class="section-header"><div class="section-title"><div class="section-title-icon" style="background:var(--accent-green-dim);color:var(--accent-green);">⬇️</div><span class="tl" data-nl="Exporteren" data-en="Export">Exporteren</span></div></div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="downloadDecoderExcel()">📊 <span class="tl" data-nl="Volledig Excel Rapport" data-en="Full Excel Report">Volledig Excel Rapport</span></button>
+                <button class="btn btn-success" onclick="downloadTrainingPlan()">📝 <span class="tl" data-nl="Trainingsplan (HTML)" data-en="Training Plan (HTML)">Trainingsplan (HTML)</span></button>
+                <button class="btn btn-secondary" onclick="resetDecoder()">🔄 <span class="tl" data-nl="Nieuw Rapport" data-en="New Report">Nieuw Rapport</span></button>
+            </div>
         </div>
     </div>
 </div>
@@ -615,7 +818,34 @@ function addCustomReplace() {
 // NEW SCENARIOS
 // =====================================================
 function addNewScenario() {
-    newScenarios.push({ id: Date.now(), title:'', category:'Reactief', type:'alarm', description:'', correctAnswer:'', wrongAnswer1:'', wrongAnswer2:'', wrongAnswer3:'' });
+    newScenarios.push({ 
+        id: Date.now(), 
+        replacesScenario: 0, // 0 = geen vervanging, 1-50 = scenario nummer
+        title: '', 
+        category: 'Reactief', 
+        type: 'alarm', 
+        description: '',
+        radioMessage: '',
+        // Details (optioneel)
+        detailLocation: '',
+        detailProduct: '',
+        detailStatus: '',
+        detailExtra: '',
+        // Correct antwoord
+        correctAnswer: '',
+        correctFeedback: '',
+        correctResponse: '',
+        // Foute antwoorden
+        wrongAnswer1: '',
+        wrongFeedback1: '',
+        wrongResponse1: '',
+        wrongAnswer2: '',
+        wrongFeedback2: '',
+        wrongResponse2: '',
+        wrongAnswer3: '',
+        wrongFeedback3: '',
+        wrongResponse3: ''
+    });
     renderNewScenarios();
     updateStats();
 }
@@ -637,20 +867,143 @@ function renderNewScenarios() {
     document.querySelector('.new-count').textContent = newScenarios.length;
     if (!newScenarios.length) { c.innerHTML = ''; e.classList.remove('hidden'); return; }
     e.classList.add('hidden');
+    
+    // Maak scenario opties voor dropdown
+    const scenarioOptions = SD.map((s,i) => `<option value="${i+1}">${i+1}. ${s.title.substring(0,50)}${s.title.length>50?'...':''}</option>`).join('');
+    
     c.innerHTML = newScenarios.map((s,i) => `
         <div class="new-scenario-item">
-            <div class="new-scenario-item-header"><h4>📝 ${T('Concept Scenario','Concept Scenario')} ${i+1}</h4>
-            <button class="btn btn-danger btn-sm" onclick="removeNewScenario(${s.id})">${T('Verwijderen','Remove')}</button></div>
-            <div class="form-grid">
-                <div class="form-group full-width"><label>${T('Titel','Title')}</label><input type="text" value="${esc(s.title)}" placeholder="${T('bijv. KRITIEK: Lekkage bij opslagtank','e.g. CRITICAL: Storage tank leakage')}" oninput="updateNewScenario(${s.id},'title',this.value)"></div>
-                <div class="form-group"><label>${T('Categorie','Category')}</label><select onchange="updateNewScenario(${s.id},'category',this.value)">${CATEGORIES.map(c=>`<option value="${c.name}" ${s.category===c.name?'selected':''}>${c.name}</option>`).join('')}</select></div>
-                <div class="form-group"><label>Type</label><select onchange="updateNewScenario(${s.id},'type',this.value)"><option value="alarm" ${s.type==='alarm'?'selected':''}>🔴 Alarm</option><option value="warning" ${s.type==='warning'?'selected':''}>🟡 Warning</option></select></div>
-                <div class="form-group full-width"><label>${T('Situatiebeschrijving','Description')}</label><textarea placeholder="${T('Beschrijf de DCS-situatie...','Describe the DCS situation...')}" oninput="updateNewScenario(${s.id},'description',this.value)">${esc(s.description)}</textarea></div>
-                <div class="form-group full-width"><label style="color:var(--accent-green);">✅ ${T('Correct antwoord','Correct Answer')}</label><textarea placeholder="${T('Juiste portofoon-instructie + uitleg...','Correct radio instruction + explanation...')}" oninput="updateNewScenario(${s.id},'correctAnswer',this.value)">${esc(s.correctAnswer)}</textarea></div>
-                <div class="form-group full-width"><label style="color:var(--accent-red);">❌ ${T('Fout antwoord 1','Wrong Answer 1')}</label><textarea rows="2" oninput="updateNewScenario(${s.id},'wrongAnswer1',this.value)">${esc(s.wrongAnswer1)}</textarea></div>
-                <div class="form-group full-width"><label style="color:var(--accent-red);">❌ ${T('Fout antwoord 2','Wrong Answer 2')}</label><textarea rows="2" oninput="updateNewScenario(${s.id},'wrongAnswer2',this.value)">${esc(s.wrongAnswer2)}</textarea></div>
-                <div class="form-group full-width"><label style="color:var(--accent-red);">❌ ${T('Fout antwoord 3','Wrong Answer 3')}</label><textarea rows="2" oninput="updateNewScenario(${s.id},'wrongAnswer3',this.value)">${esc(s.wrongAnswer3)}</textarea></div>
+            <div class="new-scenario-item-header">
+                <h4>📝 ${T('Vervangend Scenario','Replacement Scenario')} ${i+1}</h4>
+                <button class="btn btn-danger btn-sm" onclick="removeNewScenario(${s.id})">${T('Verwijderen','Remove')}</button>
             </div>
+            
+            <!-- VERVANGING SECTIE -->
+            <div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.25);border-radius:8px;padding:16px;margin-bottom:20px;">
+                <div class="edit-section-title" style="color:var(--accent-red);margin-bottom:12px;">🔄 ${T('Vervangt bestaand scenario','Replaces existing scenario')}</div>
+                <div class="form-group">
+                    <label>${T('Selecteer welk scenario dit vervangt','Select which scenario this replaces')} <span style="color:var(--accent-red);">*</span></label>
+                    <select style="font-size:14px;" onchange="updateNewScenario(${s.id},'replacesScenario',parseInt(this.value))">
+                        <option value="0" ${s.replacesScenario===0?'selected':''}>${T('-- Selecteer scenario --','-- Select scenario --')}</option>
+                        ${scenarioOptions.replace(`value="${s.replacesScenario}"`, `value="${s.replacesScenario}" selected`)}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- BASIS INFO -->
+            <div class="edit-section">
+                <div class="edit-section-title">📋 ${T('Basisgegevens','Basic Info')}</div>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>${T('Titel','Title')} <span style="color:var(--accent-red);">*</span></label>
+                        <input type="text" value="${esc(s.title)}" placeholder="${T('bijv. KRITIEK: Lekkage bij opslagtank','e.g. CRITICAL: Storage tank leakage')}" oninput="updateNewScenario(${s.id},'title',this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>${T('Categorie','Category')}</label>
+                        <select onchange="updateNewScenario(${s.id},'category',this.value)">${CATEGORIES.map(c=>`<option value="${c.name}" ${s.category===c.name?'selected':''}>${c.name}</option>`).join('')}</select>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select onchange="updateNewScenario(${s.id},'type',this.value)">
+                            <option value="alarm" ${s.type==='alarm'?'selected':''}>🔴 Alarm (kritiek)</option>
+                            <option value="warning" ${s.type==='warning'?'selected':''}>🟡 Warning</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SITUATIE -->
+            <div class="edit-section">
+                <div class="edit-section-title">📝 ${T('Situatie','Situation')}</div>
+                <div class="form-group full-width">
+                    <label>${T('Situatiebeschrijving','Description')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="3" placeholder="${T('Beschrijf wat de operator op het DCS-scherm ziet en de context van de situatie...','Describe what the operator sees on the DCS screen and the context...')}" oninput="updateNewScenario(${s.id},'description',this.value)">${esc(s.description)}</textarea>
+                </div>
+                <div class="form-group full-width">
+                    <label>${T('Portofoonbericht (inkomend)','Radio message (incoming)')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" placeholder="${T('📻 Naam: "Bericht van veldoperator..."','📻 Name: "Message from field operator..."')}" oninput="updateNewScenario(${s.id},'radioMessage',this.value)">${esc(s.radioMessage)}</textarea>
+                </div>
+            </div>
+            
+            <!-- DETAILS (OPTIONEEL) -->
+            <div class="edit-section">
+                <div class="edit-section-title" style="color:var(--text-muted);">📊 ${T('DCS Details','DCS Details')} <span style="font-weight:400;font-size:11px;">(${T('optioneel','optional')})</span></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>${T('Locatie','Location')}</label><input type="text" value="${esc(s.detailLocation||'')}" placeholder="${T('bijv. Tank-015, Pompstation-3','e.g. Tank-015, Pump station-3')}" oninput="updateNewScenario(${s.id},'detailLocation',this.value)"></div>
+                    <div class="form-group"><label>${T('Product','Product')}</label><input type="text" value="${esc(s.detailProduct||'')}" placeholder="${T('bijv. Diesel EN590','e.g. Diesel EN590')}" oninput="updateNewScenario(${s.id},'detailProduct',this.value)"></div>
+                    <div class="form-group"><label>${T('Status/Waarde','Status/Value')}</label><input type="text" value="${esc(s.detailStatus||'')}" placeholder="${T('bijv. 85% niveau, 18% LEL','e.g. 85% level, 18% LEL')}" oninput="updateNewScenario(${s.id},'detailStatus',this.value)"></div>
+                    <div class="form-group"><label>${T('Extra info','Extra info')}</label><input type="text" value="${esc(s.detailExtra||'')}" placeholder="${T('bijv. Wind ZW 12 km/u','e.g. Wind SW 12 km/h')}" oninput="updateNewScenario(${s.id},'detailExtra',this.value)"></div>
+                </div>
+            </div>
+            
+            <!-- CORRECT ANTWOORD -->
+            <div class="edit-section" style="background:rgba(34,211,160,0.06);border:1px solid rgba(34,211,160,0.2);border-radius:8px;padding:16px;margin-top:16px;">
+                <div class="edit-section-title" style="color:var(--accent-green);">✅ ${T('Correct antwoord','Correct answer')}</div>
+                <div class="form-group">
+                    <label>${T('Antwoordtekst (portofoon instructie)','Answer text (radio instruction)')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" placeholder="${T('📻 "Naam, instructie aan veldoperator..."','📻 "Name, instruction to field operator..."')}" oninput="updateNewScenario(${s.id},'correctAnswer',this.value)">${esc(s.correctAnswer)}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>${T('Feedback (waarom correct)','Feedback (why correct)')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" placeholder="${T('Uitleg waarom dit de juiste actie is...','Explanation why this is the correct action...')}" oninput="updateNewScenario(${s.id},'correctFeedback',this.value)">${esc(s.correctFeedback||'')}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>${T('Reactie veldoperator','Field operator response')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" placeholder="${T('📻 Naam: "Bevestiging/reactie van veldoperator..."','📻 Name: "Confirmation/response from field operator..."')}" oninput="updateNewScenario(${s.id},'correctResponse',this.value)">${esc(s.correctResponse||'')}</textarea>
+                </div>
+            </div>
+            
+            <!-- FOUT ANTWOORD 1 -->
+            <div class="edit-section" style="background:rgba(248,113,113,0.05);border:1px solid rgba(248,113,113,0.15);border-radius:8px;padding:16px;margin-top:12px;">
+                <div class="edit-section-title" style="color:var(--accent-red);">❌ ${T('Fout antwoord 1','Wrong answer 1')}</div>
+                <div class="form-group">
+                    <label>${T('Antwoordtekst','Answer text')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" placeholder="${T('Foutieve portofoon instructie...','Incorrect radio instruction...')}" oninput="updateNewScenario(${s.id},'wrongAnswer1',this.value)">${esc(s.wrongAnswer1)}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>${T('Feedback (waarom fout)','Feedback (why wrong)')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" placeholder="${T('Uitleg waarom dit fout is...','Explanation why this is wrong...')}" oninput="updateNewScenario(${s.id},'wrongFeedback1',this.value)">${esc(s.wrongFeedback1||'')}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>${T('Reactie veldoperator','Field operator response')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" placeholder="${T('📻 Reactie die het probleem blootlegt...','📻 Response that exposes the problem...')}" oninput="updateNewScenario(${s.id},'wrongResponse1',this.value)">${esc(s.wrongResponse1||'')}</textarea>
+                </div>
+            </div>
+            
+            <!-- FOUT ANTWOORD 2 -->
+            <div class="edit-section" style="background:rgba(248,113,113,0.05);border:1px solid rgba(248,113,113,0.15);border-radius:8px;padding:16px;margin-top:12px;">
+                <div class="edit-section-title" style="color:var(--accent-red);">❌ ${T('Fout antwoord 2','Wrong answer 2')}</div>
+                <div class="form-group">
+                    <label>${T('Antwoordtekst','Answer text')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" oninput="updateNewScenario(${s.id},'wrongAnswer2',this.value)">${esc(s.wrongAnswer2)}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>${T('Feedback (waarom fout)','Feedback (why wrong)')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" oninput="updateNewScenario(${s.id},'wrongFeedback2',this.value)">${esc(s.wrongFeedback2||'')}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>${T('Reactie veldoperator','Field operator response')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" oninput="updateNewScenario(${s.id},'wrongResponse2',this.value)">${esc(s.wrongResponse2||'')}</textarea>
+                </div>
+            </div>
+            
+            <!-- FOUT ANTWOORD 3 -->
+            <div class="edit-section" style="background:rgba(248,113,113,0.05);border:1px solid rgba(248,113,113,0.15);border-radius:8px;padding:16px;margin-top:12px;">
+                <div class="edit-section-title" style="color:var(--accent-red);">❌ ${T('Fout antwoord 3','Wrong answer 3')}</div>
+                <div class="form-group">
+                    <label>${T('Antwoordtekst','Answer text')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" oninput="updateNewScenario(${s.id},'wrongAnswer3',this.value)">${esc(s.wrongAnswer3)}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>${T('Feedback (waarom fout)','Feedback (why wrong)')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" oninput="updateNewScenario(${s.id},'wrongFeedback3',this.value)">${esc(s.wrongFeedback3||'')}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>${T('Reactie veldoperator','Field operator response')} <span style="color:var(--accent-red);">*</span></label>
+                    <textarea rows="2" oninput="updateNewScenario(${s.id},'wrongResponse3',this.value)">${esc(s.wrongResponse3||'')}</textarea>
+                </div>
+            </div>
+            
         </div>`).join('');
 }
 
@@ -676,7 +1029,7 @@ function updateStats() {
 // =====================================================
 function gatherConfig() {
     const config = {
-        meta: { version: '2.0', created: new Date().toISOString(), portal: 'OIP Simulator Customization Portal v2' },
+        meta: { version: '2.0', created: new Date().toISOString(), portal: 'OIP Simulator Controller v2' },
         company: {
             name: document.getElementById('companyName').value.trim(),
             terminal: document.getElementById('terminalName').value.trim(),
@@ -733,10 +1086,17 @@ function generateExport() {
                 [T('Equipment wijzigingen','Equipment Changes'), nEq, 'var(--accent-purple)'],
                 [T('Vrije vervangingen','Custom Replacements'), nCu, 'var(--accent-cyan)'],
                 [T("Scenario's bewerkt","Scenarios Edited"), nSe, 'var(--accent-orange)'],
-                [T("Nieuwe scenario's","New Scenarios"), exportData.newScenarios.length, 'var(--accent-green)'],
+                [T("Vervangingen","Replacements"), exportData.newScenarios.filter(s=>s.replacesScenario>0).length, 'var(--accent-red)'],
                 [T('Toon','Tone'), exportData.toneSettings.formality === 'formal' ? T('Formeel (u)','Formal') : T('Informeel (je)','Informal'), 'var(--text-secondary)']
             ].map(([l,v,c]) => `<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">${l}</div><div style="font-size:14px;color:${c};margin-top:4px;font-weight:600;">${v}</div></div>`).join('')}
-        </div>`;
+        </div>${exportData.newScenarios.filter(s=>s.replacesScenario>0).length > 0 ? `
+        <div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:14px;margin-bottom:16px;">
+            <div style="font-size:12px;color:var(--accent-red);font-weight:600;margin-bottom:8px;">🔄 ${T('Scenario vervangingen:','Scenario replacements:')}</div>
+            ${exportData.newScenarios.filter(s=>s.replacesScenario>0).map(s => {
+                const orig = SD[s.replacesScenario-1];
+                return `<div style="font-size:13px;color:var(--text-secondary);padding:4px 0;">• <strong>#${s.replacesScenario}</strong> "${orig?.title?.substring(0,40)||'...'}..." → "${s.title?.substring(0,40)||'(geen titel)'}..."</div>`;
+            }).join('')}
+        </div>` : ''}`;
     document.getElementById('exportSummary').classList.remove('hidden');
     document.getElementById('exportPreview').textContent = json;
     document.getElementById('exportPreviewContainer').classList.remove('hidden');
@@ -827,11 +1187,600 @@ function showToast(msg) {
 }
 
 // =====================================================
+// PERSOONLIJKE CONFIGURATIE FUNCTIES
+// =====================================================
+let issuedConfigs = JSON.parse(localStorage.getItem('oip_issued_configs') || '[]');
+
+function saveIssuedConfigs() {
+    localStorage.setItem('oip_issued_configs', JSON.stringify(issuedConfigs));
+    updateIssuedDisplay();
+}
+
+function buildPersonalConfig(participantName, expiresAt) {
+    // Genereer unieke sessie ID (voor tracking)
+    const sessionId = 'SIM-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+    
+    // Bouw configuratie op basis van huidige instellingen (zelfde structuur als gatherConfig)
+    const config = {
+        meta: { version: '2.0', created: new Date().toISOString(), portal: 'OIP Simulator Controller v2' },
+        participant: {
+            name: participantName,
+            sessionId: sessionId,
+            expiresAt: expiresAt
+        },
+        company: {
+            name: document.getElementById('companyName').value.trim(),
+            terminal: document.getElementById('terminalName').value.trim(),
+            simTitle: document.getElementById('simTitle').value.trim()
+        },
+        toneSettings: {
+            formality: document.querySelector('input[name="formality"]:checked')?.value || 'informal',
+            protocol: document.querySelector('input[name="protocol"]:checked')?.value || 'standard',
+            radioOpening: document.getElementById('radioOpening').value.trim(),
+            terminology: {
+                controlRoom: document.getElementById('termCR').value.trim(),
+                fieldOperator: document.getElementById('termField').value.trim(),
+                dcsSystem: document.getElementById('termDCS').value.trim(),
+                radio: document.getElementById('termRadio').value.trim()
+            },
+            sopReferences: {
+                emergency: document.getElementById('sopEmergency').value.trim(),
+                leakage: document.getElementById('sopLeakage').value.trim(),
+                fire: document.getElementById('sopFire').value.trim(),
+                startup: document.getElementById('sopStartup').value.trim(),
+                hse: document.getElementById('sopHSE').value.trim()
+            }
+        },
+        replacements: { operators: {}, products: {}, equipment: {}, custom: [] },
+        scenarioEdits: scenarioEdits,
+        newScenarios: newScenarios.filter(s => s.title.trim())
+    };
+    
+    // Verzamel replacements
+    document.querySelectorAll('[data-rn]').forEach(i => { if(i.value.trim()) config.replacements.operators[i.getAttribute('data-rn')] = i.value.trim(); });
+    document.querySelectorAll('[data-rp]').forEach(i => { if(i.value.trim()) config.replacements.products[i.getAttribute('data-rp')] = i.value.trim(); });
+    document.querySelectorAll('[data-re]').forEach(i => { if(i.value.trim()) config.replacements.equipment[i.getAttribute('data-re')] = i.value.trim(); });
+    document.querySelectorAll('[data-cs]').forEach(i => {
+        const r = i.closest('tr').querySelector('[data-cr]');
+        if(i.value.trim() && r?.value.trim()) config.replacements.custom.push({ search: i.value.trim(), replace: r.value.trim() });
+    });
+    
+    return config;
+}
+
+function generatePersonalConfig() {
+    console.log('generatePersonalConfig called');
+    const participantName = document.getElementById('participantNameForCode').value.trim();
+    console.log('participantName:', participantName);
+    if (!participantName) {
+        showToast('⚠️ Voer een deelnemernaam in');
+        document.getElementById('participantNameForCode').focus();
+        return;
+    }
+    
+    const expiry = document.getElementById('singleCodeExpiry').value;
+    const expiresAt = expiry ? new Date(expiry + 'T23:59:59').toISOString() : null;
+    console.log('expiresAt:', expiresAt);
+    
+    try {
+        const config = buildPersonalConfig(participantName, expiresAt);
+        console.log('config built:', config);
+        
+        // Registreer uitgegeven configuratie
+        issuedConfigs.push({
+            participantName: participantName,
+            sessionId: config.participant.sessionId,
+            createdAt: new Date().toISOString(),
+            expiresAt: expiresAt
+        });
+        saveIssuedConfigs();
+        
+        // Download JSON
+        const filename = `simulator_${participantName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+        console.log('downloading:', filename);
+        downloadJSON(config, filename);
+        
+        // Clear input
+        document.getElementById('participantNameForCode').value = '';
+        
+        showToast(`✅ Configuratie voor ${participantName} gedownload`);
+    } catch(e) {
+        console.error('Error in generatePersonalConfig:', e);
+        showToast('❌ Fout: ' + e.message);
+    }
+}
+
+function generateBatchConfigs() {
+    const namesText = document.getElementById('batchParticipantNames').value.trim();
+    if (!namesText) {
+        showToast('⚠️ Voer minimaal één naam in');
+        return;
+    }
+    
+    const names = namesText.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+    if (names.length === 0) {
+        showToast('⚠️ Geen geldige namen gevonden');
+        return;
+    }
+    
+    const expiry = document.getElementById('batchCodeExpiry').value;
+    const expiresAt = expiry ? new Date(expiry + 'T23:59:59').toISOString() : null;
+    
+    // Genereer voor elke deelnemer
+    const configs = [];
+    names.forEach(name => {
+        const config = buildPersonalConfig(name, expiresAt);
+        configs.push({ name, config, sessionId: config.participant.sessionId });
+        
+        // Registreer
+        issuedConfigs.push({
+            participantName: name,
+            sessionId: config.participant.sessionId,
+            createdAt: new Date().toISOString(),
+            expiresAt: expiresAt
+        });
+    });
+    
+    saveIssuedConfigs();
+    
+    // Download als ZIP (of individuele bestanden)
+    if (configs.length === 1) {
+        const c = configs[0];
+        const filename = `simulator_${c.name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+        downloadJSON(c.config, filename);
+    } else {
+        // Download elk bestand individueel met korte delay
+        configs.forEach((c, i) => {
+            setTimeout(() => {
+                const filename = `simulator_${c.name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+                downloadJSON(c.config, filename);
+            }, i * 300);
+        });
+    }
+    
+    // Clear input
+    document.getElementById('batchParticipantNames').value = '';
+    updateBatchCount();
+    
+    showToast(`✅ ${configs.length} configuratie${configs.length > 1 ? 's' : ''} gegenereerd`);
+}
+
+function downloadJSON(config, filename) {
+    const json = JSON.stringify(config, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function updateBatchCount() {
+    const namesText = document.getElementById('batchParticipantNames').value.trim();
+    const names = namesText ? namesText.split('\n').map(n => n.trim()).filter(n => n.length > 0) : [];
+    document.getElementById('batchCount').textContent = `${names.length} deelnemer${names.length !== 1 ? 's' : ''}`;
+}
+
+function updateIssuedDisplay() {
+    const tbody = document.getElementById('issuedTableBody');
+    const noMsg = document.getElementById('noIssuedMessage');
+    const table = document.getElementById('issuedTable');
+    
+    if (issuedConfigs.length === 0) {
+        table.style.display = 'none';
+        noMsg.style.display = 'block';
+    } else {
+        table.style.display = 'table';
+        noMsg.style.display = 'none';
+    }
+    
+    // Sorteer nieuwste eerst
+    const sorted = [...issuedConfigs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    tbody.innerHTML = sorted.map(c => {
+        const created = new Date(c.createdAt).toLocaleDateString('nl-NL');
+        const expires = c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('nl-NL') : 'Onbeperkt';
+        const isExpired = c.expiresAt && new Date(c.expiresAt) < new Date();
+        
+        return `<tr style="${isExpired ? 'opacity:0.5;' : ''}">
+            <td style="font-weight:500;">${escapeHtml(c.participantName)}</td>
+            <td><code style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--bg-input);padding:4px 8px;border-radius:4px;">${c.sessionId || '-'}</code></td>
+            <td>${created}</td>
+            <td>${expires}${isExpired ? ' <span style="color:var(--accent-orange);">(verlopen)</span>' : ''}</td>
+            <td>
+                <button class="btn btn-secondary btn-sm" onclick="regenerateConfig('${c.sessionId}')" title="Nieuwe configuratie">🔄</button>
+                <button class="btn btn-secondary btn-sm" onclick="deleteIssuedConfig('${c.sessionId}')" title="Verwijder" style="color:var(--accent-red);">✕</button>
+            </td>
+        </tr>`;
+    }).join('');
+    
+    // Update badge
+    document.querySelectorAll('.codes-active').forEach(el => {
+        el.textContent = issuedConfigs.length;
+    });
+}
+
+function regenerateConfig(sessionId) {
+    const config = issuedConfigs.find(c => c.sessionId === sessionId);
+    if (!config) return;
+    
+    // Genereer nieuwe configuratie voor dezelfde deelnemer
+    const newConfig = buildPersonalConfig(config.participantName, config.expiresAt);
+    
+    // Update registratie
+    issuedConfigs.push({
+        participantName: config.participantName,
+        sessionId: newConfig.participant.sessionId,
+        createdAt: new Date().toISOString(),
+        expiresAt: config.expiresAt
+    });
+    saveIssuedConfigs();
+    
+    // Download
+    const filename = `simulator_${config.participantName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+    downloadJSON(newConfig, filename);
+    
+    showToast(`✅ Nieuwe configuratie voor ${config.participantName}`);
+}
+
+function deleteIssuedConfig(sessionId) {
+    if (!confirm('Deze registratie verwijderen uit het overzicht?')) return;
+    issuedConfigs = issuedConfigs.filter(c => c.sessionId !== sessionId);
+    saveIssuedConfigs();
+    showToast('🗑️ Registratie verwijderd');
+}
+
+function clearIssuedConfigs() {
+    if (issuedConfigs.length === 0) {
+        showToast('✅ Lijst is al leeg');
+        return;
+    }
+    if (!confirm(`Alle ${issuedConfigs.length} registraties verwijderen?`)) return;
+    issuedConfigs = [];
+    saveIssuedConfigs();
+    showToast('🗑️ Lijst gewist');
+}
+
+function downloadIssuedList() {
+    if (issuedConfigs.length === 0) {
+        showToast('⚠️ Geen configuraties uitgegeven');
+        return;
+    }
+    
+    let csv = 'Deelnemer,Sessie ID,Aangemaakt,Geldig tot\n';
+    issuedConfigs.forEach(c => {
+        const created = new Date(c.createdAt).toLocaleDateString('nl-NL');
+        const expires = c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('nl-NL') : 'Onbeperkt';
+        csv += `"${c.participantName}",${c.sessionId || '-'},${created},${expires}\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'uitgegeven_configuraties_' + new Date().toISOString().split('T')[0] + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('⬇️ Overzicht gedownload');
+}
+
+// =====================================================
+// DECODER FUNCTIES
+// =====================================================
+let decoderFileContent = null;
+let decoderData = null;
+
+function handleDecoderDrop(e) {
+    e.preventDefault();
+    e.target.style.borderColor = 'var(--border)';
+    e.target.style.background = 'transparent';
+    const file = e.dataTransfer.files[0];
+    if (file) loadDecoderFile(file);
+}
+
+function handleDecoderFile(e) {
+    const file = e.target.files[0];
+    if (file) loadDecoderFile(file);
+}
+
+function loadDecoderFile(file) {
+    if (!file.name.endsWith('.xls') && !file.name.endsWith('.xlsx')) {
+        showToast('⚠️ Alleen .xls bestanden worden ondersteund');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        decoderFileContent = e.target.result;
+        document.getElementById('decoderFileName').textContent = file.name;
+        document.getElementById('decoderFileMeta').textContent = `${(file.size / 1024).toFixed(1)} KB • ${new Date(file.lastModified).toLocaleDateString('nl-NL')}`;
+        document.getElementById('decoderUploadSection').classList.add('hidden');
+        document.getElementById('decoderProcessingSection').classList.remove('hidden');
+        
+        // Direct ontsleutelen na korte delay voor UI feedback
+        setTimeout(() => {
+            decryptReport();
+        }, 300);
+    };
+    reader.readAsText(file);
+}
+
+function resetDecoder() {
+    decoderFileContent = null;
+    decoderData = null;
+    document.getElementById('decoderUploadSection').classList.remove('hidden');
+    document.getElementById('decoderProcessingSection').classList.add('hidden');
+    document.getElementById('decoderResultsSection').classList.add('hidden');
+    document.getElementById('decoderFileInput').value = '';
+    document.getElementById('decoderError').classList.add('hidden');
+}
+
+function decryptReport() {
+    // Zoek versleutelde data
+    const match = decoderFileContent.match(/OIP_ENCRYPTED_V1[\s\S]*?CHUNKS:(\d+)([\s\S]*?)OIP_END/);
+    if (!match) {
+        showDecoderError('Dit bestand bevat geen geldige versleutelde trainingsdata.');
+        return;
+    }
+    
+    const chunkCount = parseInt(match[1]);
+    const dataSection = match[2];
+    const chunkMatches = dataSection.match(/<Data ss:Type="String">([^<]+)<\/Data>/g);
+    
+    if (!chunkMatches || chunkMatches.length < chunkCount) {
+        showDecoderError('Bestand is corrupt of onvolledig.');
+        return;
+    }
+    
+    let encryptedData = '';
+    for (let i = 0; i < chunkCount; i++) {
+        const chunk = chunkMatches[i].replace(/<Data ss:Type="String">/, '').replace(/<\/Data>/, '');
+        encryptedData += chunk;
+    }
+    
+    try {
+        const decrypted = decryptData(encryptedData);
+        decoderData = JSON.parse(decrypted);
+        displayDecoderResults(decoderData);
+    } catch (err) {
+        showDecoderError('Onjuist wachtwoord of corrupt bestand.');
+        console.error(err);
+    }
+}
+
+function decryptData(encrypted) {
+    try {
+        // Check voor fallback formaat
+        if (encrypted.startsWith('FALLBACK:')) {
+            const base64Data = encrypted.substring(9);
+            return decodeURIComponent(escape(atob(base64Data)));
+        }
+        
+        // Check voor error formaat
+        if (encrypted.startsWith('ERROR:')) {
+            throw new Error('Bestand bevat geen geldige data');
+        }
+        
+        // Normale decryptie
+        const decoded = atob(encrypted);
+        const key = 'OIP-Training-2024-SecureKey';
+        let decrypted = '';
+        for (let i = 0; i < decoded.length; i++) {
+            const charCode = decoded.charCodeAt(i) ^ (key.charCodeAt(i % key.length) % 64);
+            decrypted += String.fromCharCode(charCode);
+        }
+        return decodeURIComponent(escape(atob(decrypted)));
+    } catch (e) {
+        console.error('Decryption error:', e);
+        // Probeer oude formaat (voor backwards compatibility)
+        try {
+            const decoded = atob(encrypted);
+            const key = 'OIP-Training-2024-SecureKey';
+            let decrypted = '';
+            for (let i = 0; i < decoded.length; i++) {
+                const charCode = decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                decrypted += String.fromCharCode(charCode);
+            }
+            return decodeURIComponent(escape(atob(decrypted)));
+        } catch (e2) {
+            throw new Error('Kan bestand niet ontsleutelen: ' + e.message);
+        }
+    }
+}
+
+function showDecoderError(msg) {
+    const el = document.getElementById('decoderError');
+    el.textContent = '⚠️ ' + msg;
+    el.classList.remove('hidden');
+}
+
+function displayDecoderResults(data) {
+    document.getElementById('decoderProcessingSection').classList.add('hidden');
+    document.getElementById('decoderResultsSection').classList.remove('hidden');
+    
+    // Deelnemer
+    document.getElementById('decoderParticipantName').textContent = data.participant.name;
+    document.getElementById('decoderParticipantExp').textContent = data.participant.experienceLabel;
+    document.getElementById('decoderSimulator').textContent = data.simulator;
+    document.getElementById('decoderTrainingDate').textContent = data.participant.trainingDate + ' om ' + data.participant.trainingTime;
+    
+    // Scores
+    document.getElementById('decoderScore').textContent = data.results.score + '%';
+    document.getElementById('decoderCorrect').textContent = data.results.correct;
+    document.getElementById('decoderIncorrect').textContent = data.results.incorrect;
+    document.getElementById('decoderTotal').textContent = data.results.total;
+    
+    // Advies
+    let advice = '';
+    const score = data.results.score;
+    if (score >= 85) advice = 'Uitstekende prestatie! Focus op behouden van niveau en laat deze deelnemer eventueel collega\'s begeleiden.';
+    else if (score >= 70) advice = 'Goede basis aanwezig. Plan gerichte oefensessies voor categorieën met lagere scores.';
+    else if (score >= 50) advice = 'Voldoende, maar verbetering nodig. Plan wekelijkse oefensessies en laat meelopen met ervaren operators.';
+    else advice = 'Intensieve training aanbevolen. Plan dagelijkse korte oefensessies en wijs een mentor toe.';
+    document.getElementById('decoderAdvice').textContent = advice;
+    
+    // Categorie tabel
+    const catBody = document.getElementById('decoderCategoryTable');
+    catBody.innerHTML = '';
+    const priorityOrder = { 'Hoog': 1, 'Gemiddeld': 2, 'Laag': 3, 'Geen': 4 };
+    const sorted = [...data.categoryResults].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    
+    sorted.forEach(cat => {
+        const priorityStyle = cat.priority === 'Hoog' ? 'background:rgba(248,113,113,0.15);color:var(--accent-red);' : 
+                              cat.priority === 'Gemiddeld' ? 'background:rgba(251,191,36,0.15);color:var(--accent-orange);' : 
+                              cat.priority === 'Laag' ? 'background:rgba(34,211,160,0.15);color:var(--accent-green);' : 
+                              'background:rgba(148,163,184,0.1);color:var(--text-muted);';
+        catBody.innerHTML += `<tr>
+            <td>${cat.category}</td>
+            <td>${cat.correct}/${cat.total}</td>
+            <td>${cat.score}%</td>
+            <td><span style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;${priorityStyle}">${cat.priority}</span></td>
+            <td style="font-size:13px;color:var(--text-secondary);">${cat.advice}</td>
+        </tr>`;
+    });
+    
+    // Scenario tabel
+    const scenBody = document.getElementById('decoderScenarioTable');
+    scenBody.innerHTML = '';
+    data.scenarioResults.forEach(r => {
+        const rowStyle = r.isCorrect ? 'background:rgba(34,211,160,0.05);' : 'background:rgba(248,113,113,0.05);';
+        const badge = r.isCorrect ? 
+            '<span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(34,211,160,0.2);color:var(--accent-green);">Correct</span>' :
+            '<span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(248,113,113,0.2);color:var(--accent-red);">Onjuist</span>';
+        scenBody.innerHTML += `<tr style="${rowStyle}">
+            <td>${r.scenarioNr}</td>
+            <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(r.title)}">${r.title}</td>
+            <td>${r.type === 'alarm' ? '🔴' : '🟡'}</td>
+            <td>${r.category}</td>
+            <td>${badge}</td>
+            <td>${r.responseTime}s</td>
+        </tr>`;
+    });
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function escapeXmlDec(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+function downloadDecoderExcel() {
+    if (!decoderData) return;
+    const data = decoderData;
+    
+    // Maak workbook
+    const wb = XLSX.utils.book_new();
+    
+    // Blad 1: Samenvatting
+    const summaryData = [
+        [data.simulator + ' - Trainingsrapport'],
+        [],
+        ['Deelnemer:', data.participant.name],
+        ['Ervaring:', data.participant.experienceLabel],
+        ['Datum:', data.participant.trainingDate + ' ' + data.participant.trainingTime],
+        [],
+        ['Score:', data.results.score + '%'],
+        ['Correct:', data.results.correct],
+        ['Onjuist:', data.results.incorrect],
+        ['Totaal:', data.results.total]
+    ];
+    const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+    ws1['!cols'] = [{ wch: 15 }, { wch: 40 }];
+    XLSX.utils.book_append_sheet(wb, ws1, 'Samenvatting');
+    
+    // Blad 2: Categorieën
+    const catHeader = ['Categorie', 'Score', '%', 'Prioriteit', 'Advies'];
+    const catRows = data.categoryResults.map(cat => [
+        cat.category,
+        cat.correct + '/' + cat.total,
+        cat.score,
+        cat.priority,
+        cat.advice
+    ]);
+    const ws2 = XLSX.utils.aoa_to_sheet([catHeader, ...catRows]);
+    ws2['!cols'] = [{ wch: 25 }, { wch: 10 }, { wch: 8 }, { wch: 12 }, { wch: 50 }];
+    XLSX.utils.book_append_sheet(wb, ws2, 'Categorie Analyse');
+    
+    // Blad 3: Scenario's
+    const scenHeader = ['Nr', 'Scenario', 'Type', 'Categorie', 'Resultaat', 'Tijd (s)', 'Antwoord', 'Feedback'];
+    const scenRows = data.scenarioResults.map(r => [
+        r.scenarioNr,
+        r.title,
+        r.type === 'alarm' ? 'Alarm' : 'Warning',
+        r.category,
+        r.isCorrect ? 'Correct' : 'Onjuist',
+        r.responseTime,
+        r.selectedAnswer,
+        r.feedback
+    ]);
+    const ws3 = XLSX.utils.aoa_to_sheet([scenHeader, ...scenRows]);
+    ws3['!cols'] = [{ wch: 5 }, { wch: 40 }, { wch: 10 }, { wch: 20 }, { wch: 10 }, { wch: 8 }, { wch: 50 }, { wch: 50 }];
+    XLSX.utils.book_append_sheet(wb, ws3, 'Scenario Details');
+    
+    // Download
+    const filename = 'Trainingsrapport_' + data.participant.name.replace(/[^a-zA-Z0-9]/g, '_') + '_' + new Date().toISOString().split('T')[0] + '.xlsx';
+    XLSX.writeFile(wb, filename);
+    showToast('✅ Excel rapport gedownload');
+}
+
+function downloadTrainingPlan() {
+    if (!decoderData) return;
+    const data = decoderData;
+    const incorrectScenarios = data.scenarioResults.filter(r => !r.isCorrect);
+    
+    let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Trainingsplan ${escapeHtml(data.participant.name)}</title>
+<style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#333}h1{color:#1a365d;border-bottom:3px solid #1a365d;padding-bottom:10px}h2{color:#2d3748;margin-top:30px}.info-box{background:#f7fafc;border-left:4px solid #3182ce;padding:15px;margin:20px 0}.score-box{text-align:center;background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:30px;border-radius:10px;margin:20px 0}.score-number{font-size:48px;font-weight:bold}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{padding:12px;text-align:left;border-bottom:1px solid #e2e8f0}th{background:#1a365d;color:white}.priority-high{background:#fed7d7}.priority-medium{background:#fefcbf}.priority-low{background:#c6f6d5}.footer{margin-top:40px;padding-top:20px;border-top:1px solid #e2e8f0;text-align:center;color:#718096;font-size:12px}@media print{body{margin:0}}</style></head><body>
+<h1>📋 Persoonlijk Trainingsplan</h1>
+<div class="info-box"><strong>Deelnemer:</strong> ${escapeHtml(data.participant.name)}<br><strong>Ervaringsniveau:</strong> ${escapeHtml(data.participant.experienceLabel)}<br><strong>Training voltooid:</strong> ${data.participant.trainingDate} om ${data.participant.trainingTime}<br><strong>Simulator:</strong> ${escapeHtml(data.simulator)}</div>
+<div class="score-box"><div class="score-number">${data.results.score}%</div><div>Totaalscore (${data.results.correct} correct van ${data.results.total})</div></div>
+<h2>🎯 Trainings Prioriteiten</h2><table><tr><th>Prioriteit</th><th>Categorie</th><th>Score</th><th>Actie</th></tr>`;
+    
+    const priorityOrder = { 'Hoog': 1, 'Gemiddeld': 2, 'Laag': 3, 'Geen': 4 };
+    const sorted = [...data.categoryResults].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    sorted.forEach(cat => {
+        if (cat.priority !== 'Geen') {
+            const cls = cat.priority === 'Hoog' ? 'priority-high' : cat.priority === 'Gemiddeld' ? 'priority-medium' : 'priority-low';
+            html += `<tr class="${cls}"><td>${cat.priority}</td><td>${escapeHtml(cat.category)}</td><td>${cat.score}%</td><td>${escapeHtml(cat.advice)}</td></tr>`;
+        }
+    });
+    
+    html += `</table><h2>🔄 Scenario's voor Herhaling (${incorrectScenarios.length})</h2><table><tr><th>Nr</th><th>Scenario</th><th>Categorie</th></tr>`;
+    incorrectScenarios.forEach(r => {
+        html += `<tr><td>${r.scenarioNr}</td><td>${escapeHtml(r.title)}</td><td>${escapeHtml(r.category)}</td></tr>`;
+    });
+    html += `</table><div class="footer">Gegenereerd door OIP Simulator Controller • ${new Date().toLocaleDateString('nl-NL')}</div></body></html>`;
+    
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Trainingsplan_' + data.participant.name.replace(/[^a-zA-Z0-9]/g, '_') + '.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('✅ Trainingsplan gedownload');
+}
+
+// =====================================================
 // INIT
 // =====================================================
 initTables();
 renderScenarios();
 renderNewScenarios();
+updateIssuedDisplay();
+
+// Event listener voor batch count
+document.getElementById('batchParticipantNames').addEventListener('input', updateBatchCount);
 </script>
 </body>
 </html>
